@@ -13,12 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.catalina.startup.ClassLoaderFactory.Repository;
 import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.boot.configurationprocessor.json.JSONArray;
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.context.annotation.Configuration;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
@@ -35,79 +37,40 @@ public class PersonaRepository{
 		return p;
 	}*/
 	
-	private JSONArray readFile() throws IOException, JSONException {
-		//FileInputStream fisTargetFile = new FileInputStream(new File(getEntityName()));
-		//BufferedReader br = Files.newBufferedReader(Paths.get(getEntityName()));
+	private List<Persona> readFile() throws IOException, JSONException {
 		File f = new File(getEntityName()+".json");
+		String data;
 		if(!f.exists()){
 		  f.createNewFile();
 		  BufferedWriter bw = new BufferedWriter(new FileWriter(f));
 		  bw.write("[]");
 		  bw.close();
-		  return new JSONArray("[]");
+		  data = "[]";
 		}else {
 			BufferedReader br = new BufferedReader(new FileReader(f));
-			String data = br.lines().reduce("", (s,l)->{return s+=l;});
+			data = br.lines().reduce("", (s,l)->{return s+=l;});
 			br.close();
-			return new JSONArray(data);
 		}
+		return new ObjectMapper().readerFor(new TypeReference<List<Persona>>() {}).readValue(data);
 	}
 	
-	private void writeFile(JSONArray list) throws IOException, JSONException {
+	private void writeFile(List<Persona> list) throws IOException, JSONException {
 		File f = new File(getEntityName()+".json");
 		BufferedWriter bw = new BufferedWriter(new FileWriter(f));
-		bw.write(list.toString(4));
+		bw.write(new ObjectMapper().writeValueAsString(list));
 		bw.close();
-	}
-	
-	public JSONObject toJSON(Persona persona) throws JSONException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-		JSONObject jsono = new JSONObject();
-		for(Field f : Persona.class.getDeclaredFields()) {
-			System.out.println(f.getType().getCanonicalName());
-			switch(f.getType().getCanonicalName()) {
-				case "int":
-				case "java.lang.String":
-					jsono.put(f.getName(),f.get(persona));	
-					break;
-			}
-				
-		}
-		return jsono;
-	}
-	
-	public Persona fromJSON(JSONObject jsono) throws IllegalAccessException, InvocationTargetException, JSONException {
-		Persona persona = new Persona();
-		for(Field f : Persona.class.getDeclaredFields()) {
-			System.out.println(f.getType().getCanonicalName());
-			switch(f.getType().getCanonicalName()) {
-				case "int":
-					f.setInt(persona, jsono.getInt(f.getName()));
-					break;
-				case "java.lang.String":
-					f.set(persona, jsono.getString(f.getName()));
-					break;
-			}
-				
-		}
-		return persona;
 	}
 
 	
-	public Persona save(Persona persona) throws JSONException, IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException{
-		/*JSONArray list = readFile();
-		persona.setId(list.length()+1);
-		list.put(toJSON(persona));
-		writeFile(list);*/
+	public Persona save(Persona persona) throws IOException, JSONException{
+		List<Persona> personas = readFile();
+		persona.setId(personas.size());
+		personas.add(persona.getId(),persona);
+		writeFile(personas);
 		
-		System.out.println(persona);
-		String json = new ObjectMapper().writeValueAsString(persona);
-		System.out.println(json);
-		Persona p = new ObjectMapper()
-			      .readerFor(Persona.class)
-			      .readValue(json);
-		System.out.println(p);
+		personas = readFile();
 		
-		return persona;
+		return personas.get(persona.getId());
 	}
 	
 	public String getEntityName() {
@@ -119,23 +82,18 @@ public class PersonaRepository{
 		return null;
 	}
 
-	public Optional<Persona> findById(int id) {
-		// TODO Auto-generated method stub
-		return null;
+	public Optional<Persona> findById(int id) throws IOException, JSONException {
+		List<Persona> personas = readFile();
+		return personas.stream().filter(p->p.getId()==id).findFirst();
 	}
-
+  
 	public boolean existsById(String id) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 	
 	public List<Persona> findAll() throws IllegalAccessException, InvocationTargetException, JSONException, IOException {
-		ArrayList<Persona> result = new ArrayList<Persona>();
-		JSONArray list = readFile();
-		for (int i=0;i<list.length();i++) {
-			result.add(fromJSON(list.getJSONObject(i))) ;
-		}
-		return result;
+		return readFile();
 	}
 
 	public Iterable<Persona> findAllById(Iterable<String> ids) {

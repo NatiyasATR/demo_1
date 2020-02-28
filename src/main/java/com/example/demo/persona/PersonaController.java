@@ -26,8 +26,10 @@ class PersonaService{
 	public Persona createPersona(@RequestBody Persona persona) throws JSONException, IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 		//Persona p = new Persona();
 		//p.setName(name);
+		System.out.println(persona);
 		System.out.println(persona.getAmigos());
-		MappingJackson2JsonView a = new MappingJackson2JsonView();
+		System.out.println(persona.getPadre());
+		//MappingJackson2JsonView a = new MappingJackson2JsonView();
 		return repository.save(persona);
 	}
 	
@@ -40,6 +42,14 @@ class PersonaService{
 	@GetMapping("/personas")
 	public List<Persona> getPersonas() throws JSONException, IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 		return repository.findAll();
+	}
+	
+	@GetMapping("/cosas")
+	public void cosas() throws JSONException, IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+		Persona a = repository.findById(1).get();
+	System.out.println(a);
+	System.out.println(a.getPadre());
+		
 	}
 	
 }
