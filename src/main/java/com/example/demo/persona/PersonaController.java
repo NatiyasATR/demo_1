@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,6 +41,10 @@ class PersonaService{
 		return p;
 	}
 	
+	@DeleteMapping("/persona")
+	public int deletepersona(@RequestBody Persona persona) throws JSONException, IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+		return repository.delete(persona);
+	}
 	
 	@GetMapping("/personas")
 	public List<Persona> getPersonas() throws JSONException, IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {

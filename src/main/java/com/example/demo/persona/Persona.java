@@ -91,11 +91,11 @@ public class Persona {
 
 
 	@Id
-	@JsonProperty
+	@JsonIgnore
 	private int id;
 	
 	@Column
-	@JsonProperty
+	@JsonIgnore
 	private String name;
 	
 	@ManyToMany

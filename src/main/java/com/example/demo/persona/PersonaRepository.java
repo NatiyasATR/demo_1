@@ -56,6 +56,9 @@ public class PersonaRepository{
 	}
 	
 	private void setRelations(Persona persona) throws IOException, JSONException {
+		System.out.println(persona);
+		System.out.println(persona.getPadre());
+		System.out.println(persona.getAmigos());
 		//Puede genera ciclos infinitos?
 		persona.setPadre(findById(persona.getPadre().getId()).orElse(null));
 		persona.setAmigos(findAllById(persona.getAmigos().stream().map(p->p.getId()).collect(Collectors.toList())));
@@ -96,11 +99,14 @@ public class PersonaRepository{
 	}
 	
 	public List<Persona> findAll() throws JSONException, IOException {
+		
 		List<Persona> personas = readFile();
 		for (Persona p : personas) {
 			Persona persona = list.get(p.getId());
-			if(persona==null) list.put(p.getId(), p);
-			else setRelations(p);
+			if(persona==null) {
+				list.put(p.getId(), p);
+				setRelations(p);
+			}
 		}
 		return list.values().stream().collect(Collectors.toList());
 	}
@@ -115,24 +121,19 @@ public class PersonaRepository{
 		return 0;
 	}
 
-	public void deleteById(String id) {
-		// TODO Auto-generated method stub
-		
+
+	public int delete(Persona persona) throws IOException, JSONException {
+		//WARN el objeto sigue existendo en todos los objetos qque hagan referencia a él no se puede borrar del todo por que java no tiene Destroy()
+		list.remove(persona.getId());
+		writeFile(list.values().stream().collect(Collectors.toList()));
+		return persona.getId();
 	}
 
-	public void delete(Persona entity) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void deleteAll(Iterable<? extends Persona> entities) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void deleteAll() {
-		// TODO Auto-generated method stub
-		
+	public void deleteAll(Iterable<? extends Persona> personas) throws IOException, JSONException {
+		personas.forEach(persona->{
+			list.remove(persona.getId());
+		});
+		writeFile(list.values().stream().collect(Collectors.toList()));
 	}
 	
 
