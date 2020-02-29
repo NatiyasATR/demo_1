@@ -100,40 +100,73 @@ public class Persona {
 	
 	@ManyToMany
 	@ToString.Exclude
-	//@JsonIgnore
+	@JsonIgnore
 	//@JsonProperty(access = Access.READ_ONLY)
 	private List<Persona> amigos;
 	
-	@JsonGetter("amigos")
+	//@JsonGetter("amigos")
+	@JsonIgnore
 	public Object getJsonAmigos(){
 		return amigos != null? amigos.stream().map(a->a.id).collect(Collectors.toList()): new ArrayList<Persona>();
 	}
 	
 	
-	@JsonSetter("amigos")
-	public void setJsonAmigos(List<String> list){
+	//@JsonSetter("amigos")
+	@JsonIgnore
+	public void setJsonAmigos(List<Integer> list){
 		if(list == null) return;
 		amigos = list.stream().map(a->new Persona(Integer.valueOf(a))).collect(Collectors.toList());
 	}
 	
 	@OneToOne
 	@ToString.Exclude
+	@JsonIgnore
 	private Persona padre;
 	
-	@JsonGetter("padre")
+	//@JsonGetter("padre")
+	@JsonIgnore
 	public Object getJsonPadre() {
 		return padre != null? padre.getId() : null;
 	}
 	
 	
-	@JsonSetter("padre")
-	public void setJsonPadre(String p){
+	//@JsonSetter("padre")
+	@JsonIgnore
+	public void setJsonPadre(Integer p){
 		if(p == null) return;
 		padre = new Persona(Integer.valueOf(p));
 	}
 	
 	
-
+	@JsonAnyGetter
+    public Map<String, Object> getProperties() {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("id", id);
+		map.put("name", name);
+		Object padre =  getJsonPadre();
+		map.put("padre", padre);
+		map.put("amigos", getJsonAmigos());
+        return map;
+    }
+	
+	@JsonAnySetter
+    public void setProperties(String key, Object value) {
+		switch(key) {
+		case "name":
+			name = (String) value;
+			break;
+		case "id":
+			id = (int) value;
+			break;
+		case "padre":
+			setJsonPadre((Integer) value);
+			break;
+		case "amigos":
+			setJsonAmigos( (List<Integer>) value);
+			break;
+			
+		}
+    }
 	
 	
 	

@@ -35,13 +35,17 @@ class PersonaService{
 	
 	@GetMapping("/persona")
 	public Persona getpersona(@RequestParam(value = "id") int id) throws JSONException, IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-		return repository.findById(id).get();
+		Persona p = repository.findById(id).get();
+		System.out.println(p);
+		return p;
 	}
 	
 	
 	@GetMapping("/personas")
 	public List<Persona> getPersonas() throws JSONException, IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-		return repository.findAll();
+		List<Persona> personas = repository.findAll();
+		System.out.println(personas);
+		return personas;
 	}
 	
 	@GetMapping("/cosas")

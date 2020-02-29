@@ -44,6 +44,7 @@ public class PersonaRepository{
 			data = br.lines().reduce("", (s,l)->{return s+=l;});
 			br.close();
 		}
+		
 		return new ObjectMapper().readerFor(new TypeReference<List<Persona>>() {}).readValue(data);
 	}
 	
@@ -55,9 +56,9 @@ public class PersonaRepository{
 	}
 	
 	private void setRelations(Persona persona) throws IOException, JSONException {
+		//Puede genera ciclos infinitos?
 		persona.setPadre(findById(persona.getPadre().getId()).orElse(null));
 		persona.setAmigos(findAllById(persona.getAmigos().stream().map(p->p.getId()).collect(Collectors.toList())));
-		System.out.println(persona.getAmigos());
 	}
 
 	
@@ -96,16 +97,17 @@ public class PersonaRepository{
 	
 	public List<Persona> findAll() throws JSONException, IOException {
 		List<Persona> personas = readFile();
-		personas.forEach(p->{
+		for (Persona p : personas) {
 			Persona persona = list.get(p.getId());
 			if(persona==null) list.put(p.getId(), p);
-		});
+			else setRelations(p);
+		}
 		return list.values().stream().collect(Collectors.toList());
 	}
 
-	public List<Persona> findAllById(Iterable<Integer> ids) {
+	public List<Persona> findAllById(List<Integer> ids) throws JSONException, IOException {
 		// TODO Auto-generated method stub
-		return null;
+		return findAll().stream().filter(p->ids.contains(p.getId())).collect(Collectors.toList());
 	}
 
 	public long count() {
