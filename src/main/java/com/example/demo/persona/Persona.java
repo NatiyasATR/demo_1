@@ -3,6 +3,7 @@ package com.example.demo.persona;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +106,7 @@ public class Persona {
 	
 	@JsonGetter("amigos")
 	public Object getJsonAmigos(){
-		return amigos != null? amigos.stream().map(a->a.id).collect(Collectors.toList()): "[]";
+		return amigos != null? amigos.stream().map(a->a.id).collect(Collectors.toList()): new ArrayList<Persona>();
 	}
 	
 	
@@ -113,33 +114,11 @@ public class Persona {
 	public void setJsonAmigos(List<String> list){
 		if(list == null) return;
 		amigos = list.stream().map(a->new Persona(Integer.valueOf(a))).collect(Collectors.toList());
-		 /*
-		List<Integer> ids = new ObjectMapper().readerFor(new TypeReference<List<Integer>>() {}).readValue(json);
-		 //ids.stream().map(id->{Persona p = new Persona();p.setId(id);return p}).collect(Collectors.toList());
-		 ids.stream().map(id->  new Persona(id.intValue())).collect(Collectors.toList()); 
-		 */
 	}
 	
 	@OneToOne
 	@ToString.Exclude
 	private Persona padre;
-	
-	/*
-	public Persona getPadre() {
-		if(padre == null) return null;
-		allInstances.stream().filter(p->p.getId() == padre.getId()).findFirst();
-		try {
-			System.out.println(allInstances);
-			return allInstances.stream().filter(p->p.getId() == padre.getId()).findFirst().orElse(
-				padre
-			);
-			//return repository.findById(padre.getId()).get();
-		} catch(Exception  e) {
-			return padre;
-		} catch (IOException | JSONException | NoSuchElementException  e) {
-			return padre;
-		}
-	}*/
 	
 	@JsonGetter("padre")
 	public Object getJsonPadre() {
@@ -152,6 +131,9 @@ public class Persona {
 		if(p == null) return;
 		padre = new Persona(Integer.valueOf(p));
 	}
+	
+	
+
 	
 	
 	

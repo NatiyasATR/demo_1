@@ -10,8 +10,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.catalina.startup.ClassLoaderFactory.Repository;
 import org.apache.commons.beanutils.BeanUtils;
@@ -26,16 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Configuration
 public class PersonaRepository{
 	
-	
-	/*private Persona parse(JSONObject jo) throws JSONException {
-		Persona p = new Persona();
-		if(jo.has("name"))
-			p.setName(jo.getString("name"));
-		if(jo.has("id"))
-			p.setName(jo.getString("id"));
-				
-		return p;
-	}*/
+	HashMap<Integer,Persona> list = new HashMap<Integer,Persona>();
 	
 	private List<Persona> readFile() throws IOException, JSONException {
 		File f = new File(getEntityName()+".json");
@@ -60,6 +53,12 @@ public class PersonaRepository{
 		bw.write(new ObjectMapper().writeValueAsString(list));
 		bw.close();
 	}
+	
+	private void setRelations(Persona persona) throws IOException, JSONException {
+		persona.setPadre(findById(persona.getPadre().getId()).orElse(null));
+		persona.setAmigos(findAllById(persona.getAmigos().stream().map(p->p.getId()).collect(Collectors.toList())));
+		System.out.println(persona.getAmigos());
+	}
 
 	
 	public Persona save(Persona persona) throws IOException, JSONException{
@@ -67,10 +66,8 @@ public class PersonaRepository{
 		persona.setId(personas.size());
 		personas.add(persona.getId(),persona);
 		writeFile(personas);
-		
 		personas = readFile();
-		
-		return personas.get(persona.getId());
+		return findById(persona.getId()).get();
 	}
 	
 	public String getEntityName() {
@@ -83,8 +80,13 @@ public class PersonaRepository{
 	}
 
 	public Optional<Persona> findById(int id) throws IOException, JSONException {
+		Persona result = list.get(id);
+		if(result!=null) return Optional.of(result);
 		List<Persona> personas = readFile();
-		return personas.stream().filter(p->p.getId()==id).findFirst();
+		Persona persona = personas.get(id);
+		list.put(id, persona);
+		setRelations(persona);
+		return Optional.ofNullable(persona);
 	}
   
 	public boolean existsById(String id) {
@@ -92,11 +94,16 @@ public class PersonaRepository{
 		return false;
 	}
 	
-	public List<Persona> findAll() throws IllegalAccessException, InvocationTargetException, JSONException, IOException {
-		return readFile();
+	public List<Persona> findAll() throws JSONException, IOException {
+		List<Persona> personas = readFile();
+		personas.forEach(p->{
+			Persona persona = list.get(p.getId());
+			if(persona==null) list.put(p.getId(), p);
+		});
+		return list.values().stream().collect(Collectors.toList());
 	}
 
-	public Iterable<Persona> findAllById(Iterable<String> ids) {
+	public List<Persona> findAllById(Iterable<Integer> ids) {
 		// TODO Auto-generated method stub
 		return null;
 	}
